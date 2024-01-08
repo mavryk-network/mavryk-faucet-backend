@@ -44,7 +44,7 @@ const sendTez = async (
   /* Note: `transfer` doesn't work well when running on node v19+. The
     underlying Axios requests breaks with "ECONNRESET error socket hang up".
     This is likely because node v19 sets HTTP(S) `keepAlive` to true by default
-    and the Tezos node ends up killing the long-lived connection. It isn't easy
+    and the Mavryk node ends up killing the long-lived connection. It isn't easy
     to configure Axios in Taquito to work around this. */
   const operation = await Tezos.contract.transfer({ to: address, amount })
   console.log(`Sent ${amount} xtz to ${address}\nHash: ${operation.hash}`)

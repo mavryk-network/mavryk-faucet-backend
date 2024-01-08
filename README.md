@@ -1,4 +1,4 @@
-# Tezos Faucet Backend
+# Mavryk Faucet Backend
 
 ## Index
 
@@ -18,7 +18,7 @@
 
 ## Overview
 
-The Tezos Faucet Backend (frontend code [here](https://github.com/oxheadalpha/tezos-faucet)) provides a reliable and secure way to distribute Tez to users. Through the implementation of a Proof of Work (PoW) mechanism, combined with CAPTCHA, we ensure users expend computational resources, thereby preventing bots and malicious actors from spamming and draining the faucet.
+The Mavryk Faucet Backend (frontend code [here](https://github.com/mavryk-network/mavryk-faucet)) provides a reliable and secure way to distribute Tez to users. Through the implementation of a Proof of Work (PoW) mechanism, combined with CAPTCHA, we ensure users expend computational resources, thereby preventing bots and malicious actors from spamming and draining the faucet.
 
 Here's a general flow of how it works:
 
@@ -28,7 +28,7 @@ Here's a general flow of how it works:
 
 ## Programmatic Faucet Usage
 
-For programmatic usage of the faucet, we provide an npm package `@oxheadalpha/get-tez`. The code can be found [here](https://github.com/oxheadalpha/tezos-faucet/tree/main/getTez). Please refer to it for more details on how to use it. This script can be run from a JavaScript program or directly from a shell. It interacts with the backend to request Tez, solve the required challenges, and verify the solutions.
+For programmatic usage of the faucet, we provide an npm package `@oxheadalpha/get-tez`. The code can be found [here](https://github.com/mavryk-network/mavryk-faucet/tree/main/getTez). Please refer to it for more details on how to use it. This script can be run from a JavaScript program or directly from a shell. It interacts with the backend to request Tez, solve the required challenges, and verify the solutions.
 
 Please note that the programmatic faucet code does not use CAPTCHA and so more challenges can be given when using it.
 
@@ -46,7 +46,7 @@ Mandatory:
 
 - `FAUCET_PRIVATE_KEY`: Faucet's private key to sign transactions
 - `CAPTCHA_SECRET`: faucet ReCAPTCHA secret key (mandatory if `ENABLE_CAPTCHA=true`)
-- `RPC_URL`: Tezos node RPC URL to connect to
+- `RPC_URL`: Mavryk node RPC URL to connect to
 
 Optional:
 
@@ -99,13 +99,13 @@ npm run dev
 ### Build
 
 ```
-docker build . -t tezos-faucet-backend
+docker build . -t mavryk-faucet-backend
 ```
 
 ### Run
 
 ```
-docker run -p 3000:3000 tezos-faucet-backend
+docker run -p 3000:3000 mavryk-faucet-backend
 ```
 
 ## API Endpoints

@@ -42,7 +42,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/${{ github.repository_owner }}/tezos-faucet-backend
+          images: ghcr.io/${{ github.repository_owner }}/mavryk-faucet-backend
           tags: |
             type=ref,event=branch
             type=ref,event=pr
