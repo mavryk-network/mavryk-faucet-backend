@@ -1,6 +1,6 @@
-import { InMemorySigner } from "@taquito/signer"
-import { TezosToolkit } from "@taquito/taquito"
-import { format } from "@taquito/utils"
+import { InMemorySigner } from "@mavrykdynamics/taquito-signer"
+import { TezosToolkit } from "@mavrykdynamics/taquito"
+import { format } from "@mavrykdynamics/taquito-utils"
 
 import env from "./env"
 
@@ -34,7 +34,7 @@ const sendTez = async (
 ): Promise<string | void> => {
   // Check max balance
   const userBalanceMutez = await Tezos.tz.getBalance(address)
-  const userBalance = Number(format("mutez", "tz", userBalanceMutez).valueOf())
+  const userBalance = Number(format("mumav", "mv", userBalanceMutez).valueOf())
 
   if (env.MAX_BALANCE !== null && userBalance + amount > env.MAX_BALANCE) {
     console.log(`${address} balance too high (${userBalance}). Not sending.`)

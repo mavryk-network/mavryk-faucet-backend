@@ -120,7 +120,7 @@ Returns details like the faucet's address, whether captcha and challenges are en
 
 ```json
 {
-  "faucetAddress": "tz1...",
+  "faucetAddress": "mv1...",
   "captchaEnabled": true,
   "challengesEnabled": true,
   "maxBalance": 6000,
@@ -137,7 +137,7 @@ Initiate the Tez request procedure.
 
 ```json
 {
-  "address": "tz1...",
+  "address": "mv1...",
   "amount": 10
 }
 ```
@@ -179,7 +179,7 @@ Submit challenge solutions and receive Tez.
 
 ```json
 {
-  "address": "tz1...",
+  "address": "mv1...",
   "nonce": 123456, // found from above pseudocode
   "solution": "0000ABC..." // hash_result from above pseudocode
 }
