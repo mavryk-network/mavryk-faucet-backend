@@ -1,4 +1,4 @@
-import { validateKeyHash } from "@taquito/utils"
+import { validateKeyHash } from "@mavrykdynamics/taquito-utils"
 import { Request, Response, NextFunction } from "express"
 
 import env from "./env"
