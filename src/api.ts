@@ -6,7 +6,7 @@ import express, { Express, Request, Response } from "express"
 import redis from "./redis"
 import { cors, challengeMiddleware, verifyMiddleware } from "./middleware"
 import { httpLogger } from "./logging"
-import { Tezos, sendTezAndRespond } from "./Mavryk"
+import { Mavryk, sendMavAndRespond } from "./Mavryk"
 import { validateCaptcha } from "./Captcha"
 import * as pow from "./pow"
 import { InfoResponseBody } from "./Types"
@@ -20,7 +20,7 @@ app.use(cors)
 app.get("/info", async (_, res: Response) => {
   try {
     const info: InfoResponseBody = {
-      faucetAddress: await Tezos.signer.publicKeyHash(),
+      faucetAddress: await Mavryk.signer.publicKeyHash(),
       captchaEnabled: env.ENABLE_CAPTCHA,
       challengesEnabled: !env.DISABLE_CHALLENGES,
       maxBalance: env.MAX_BALANCE,
