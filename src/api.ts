@@ -6,7 +6,7 @@ import express, { Express, Request, Response } from "express"
 import redis from "./redis"
 import { cors, challengeMiddleware, verifyMiddleware } from "./middleware"
 import { httpLogger } from "./logging"
-import { Tezos, sendTezAndRespond } from "./Tezos"
+import { Tezos, sendTezAndRespond } from "./Mavryk"
 import { validateCaptcha } from "./Captcha"
 import * as pow from "./pow"
 import { InfoResponseBody } from "./Types"
@@ -24,8 +24,8 @@ app.get("/info", async (_, res: Response) => {
       captchaEnabled: env.ENABLE_CAPTCHA,
       challengesEnabled: !env.DISABLE_CHALLENGES,
       maxBalance: env.MAX_BALANCE,
-      minTez: env.MIN_TEZ,
-      maxTez: env.MAX_TEZ,
+      minMav: env.MIN_MAV,
+      maxMav: env.MAX_MAV,
     }
     return res.status(200).send(info)
   } catch (error) {
@@ -96,7 +96,7 @@ app.post("/verify", verifyMiddleware, async (req: Request, res: Response) => {
     const { address, solution, nonce } = req.body
 
     if (env.DISABLE_CHALLENGES) {
-      await sendTezAndRespond(res, address, req.body.amount)
+      await sendMavAndRespond(res, address, req.body.amount)
       return
     }
 
@@ -146,22 +146,22 @@ app.post("/verify", verifyMiddleware, async (req: Request, res: Response) => {
       return res.status(200).send({ status: "SUCCESS", ...resData })
     }
 
-    // The challenge should be deleted from redis before Tez is sent. If it
+    // The challenge should be deleted from redis before Mav is sent. If it
     // failed to delete or was already deleted by another request, the user
-    // could keep getting Tez with the same solution.
+    // could keep getting Mav with the same solution.
     const deletedCount = await redis.del(challengeKey).catch((err: any) => {
       console.error(`Redis failed to delete ${challengeKey}.`)
       throw err
     })
 
     if (deletedCount === 0) {
-      // Challenge was already used/deleted, so do not send Tez
+      // Challenge was already used/deleted, so do not send Mav
       return res
         .status(403)
         .send({ status: "ERROR", message: "PoW challenge not found" })
     }
 
-    await sendTezAndRespond(res, address, amount)
+    await sendMavAndRespond(res, address, amount)
     return
   } catch (err: any) {
     console.error(err)

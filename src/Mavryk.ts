@@ -7,13 +7,13 @@ import env from "./env"
 import { Response } from "express"
 
 // Setup the TezosToolkit to interact with the chain.
-export const Tezos = (() => {
+export const Mavryk = (() => {
   const rpcUrl = env.RPC_URL
   if (!rpcUrl) {
     throw new Error("No RPC_URL defined.")
   }
 
-  const TezToolkit = new TezosToolkit(rpcUrl)
+  const MavToolkit = new TezosToolkit(rpcUrl)
 
   const faucetPrivateKey = env.FAUCET_PRIVATE_KEY
   if (!faucetPrivateKey) {
@@ -21,20 +21,20 @@ export const Tezos = (() => {
   }
 
   // Create signer
-  TezToolkit.setProvider({
+  MavToolkit.setProvider({
     signer: new InMemorySigner(faucetPrivateKey),
   })
 
-  return TezToolkit
+  return MavToolkit
 })()
 
-const sendTez = async (
+const sendMav = async (
   address: string,
   amount: number
 ): Promise<string | void> => {
   // Check max balance
-  const userBalanceMutez = await Tezos.tz.getBalance(address)
-  const userBalance = Number(format("mumav", "mv", userBalanceMutez).valueOf())
+  const userBalanceMumav = await Mavryk.tz.getBalance(address)
+  const userBalance = Number(format("mumav", "mv", userBalanceMumav).valueOf())
 
   if (env.MAX_BALANCE !== null && userBalance + amount > env.MAX_BALANCE) {
     console.log(`${address} balance too high (${userBalance}). Not sending.`)
@@ -46,18 +46,18 @@ const sendTez = async (
     This is likely because node v19 sets HTTP(S) `keepAlive` to true by default
     and the Mavryk node ends up killing the long-lived connection. It isn't easy
     to configure Axios in Taquito to work around this. */
-  const operation = await Tezos.contract.transfer({ to: address, amount })
+  const operation = await Mavryk.contract.transfer({ to: address, amount })
   console.log(`Sent ${amount} xtz to ${address}\nHash: ${operation.hash}`)
   return operation.hash
 }
 
-export const sendTezAndRespond = async (
+export const sendMavAndRespond = async (
   res: Response,
   address: string,
   amount: number
 ) => {
   try {
-    const txHash = await sendTez(address, amount)
+    const txHash = await sendMav(address, amount)
 
     if (!txHash) {
       return res
@@ -67,9 +67,9 @@ export const sendTezAndRespond = async (
 
     return res
       .status(200)
-      .send({ txHash, status: "SUCCESS", message: "Tez sent" })
+      .send({ txHash, status: "SUCCESS", message: "Mav sent" })
   } catch (err: any) {
-    console.error(`Error sending Tez to ${address}.`, err)
+    console.error(`Error sending Mav to ${address}.`, err)
 
     const { message } = err
 

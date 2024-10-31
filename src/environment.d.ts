@@ -11,8 +11,8 @@ declare global {
       REDIS_PASSWORD: string
       REDIS_URL: string
       RPC_URL: string
-      MIN_TEZ: string
-      MAX_TEZ: string
+      MIN_MAV: string
+      MAX_MAV: string
       MIN_CHALLENGES: string
       MAX_CHALLENGES: string
       MAX_CHALLENGES_WITH_CAPTCHA: string

@@ -7,8 +7,8 @@ const {
   ENABLE_CAPTCHA,
   DISABLE_CHALLENGES,
   MAX_BALANCE,
-  MIN_TEZ,
-  MAX_TEZ,
+  MIN_MAV,
+  MAX_MAV,
   MIN_CHALLENGES,
   MAX_CHALLENGES,
   MAX_CHALLENGES_WITH_CAPTCHA,
@@ -21,8 +21,8 @@ const env = {
   DISABLE_CHALLENGES: DISABLE_CHALLENGES === "true",
   ENABLE_CAPTCHA: ENABLE_CAPTCHA !== "false",
   MAX_BALANCE: MAX_BALANCE ? Number(MAX_BALANCE) : null,
-  MIN_TEZ: MIN_TEZ ? Number(MIN_TEZ) : 1,
-  MAX_TEZ: MAX_TEZ ? Number(MAX_TEZ) : 6000,
+  MIN_MAV: MIN_MAV ? Number(MIN_MAV) : 1,
+  MAX_MAV: MAX_MAV ? Number(MAX_MAV) : 6000,
   CHALLENGE_SIZE: CHALLENGE_SIZE ? Number(CHALLENGE_SIZE) : 2048,
   DIFFICULTY: DIFFICULTY ? Number(DIFFICULTY) : 4,
   MIN_CHALLENGES: MIN_CHALLENGES ? Number(MIN_CHALLENGES) : 1,
@@ -34,8 +34,8 @@ const env = {
 
 const vars: (keyof typeof env)[] = [
   "MAX_BALANCE",
-  "MAX_TEZ",
-  "MIN_TEZ",
+  "MAX_MAV",
+  "MIN_MAV",
   "CHALLENGE_SIZE",
   "DIFFICULTY",
   "MIN_CHALLENGES",
@@ -72,9 +72,9 @@ if (
   )
 }
 
-if (env.MAX_TEZ < env.MIN_TEZ || env.MIN_TEZ <= 0 || env.MAX_TEZ <= 0) {
+if (env.MAX_MAV < env.MIN_MAV || env.MIN_MAV <= 0 || env.MAX_MAV <= 0) {
   throw new Error(
-    "Env vars MAX_TEZ and MIN_TEZ must be greater than 0 and MAX_TEZ must be greater than or equal to MIN_TEZ."
+    "Env vars MAX_MAV and MIN_MAV must be greater than 0 and MAX_MAV must be greater than or equal to MIN_MAV."
   )
 }
 

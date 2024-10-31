@@ -13,24 +13,24 @@ const determineDifficulty = () => {
 
 const determineChallengesNeeded = (amount: number, usedCaptcha: boolean) => {
   const {
-    MIN_TEZ,
-    MAX_TEZ,
+    MIN_MAV,
+    MAX_MAV,
     MIN_CHALLENGES,
     MAX_CHALLENGES,
     MAX_CHALLENGES_WITH_CAPTCHA,
   } = env
 
-  // Calculate the base number of challenges based on the Tez proportion and whether a captcha was used
+  // Calculate the base number of challenges based on the Mav proportion and whether a captcha was used
   const maxChallenges = usedCaptcha
     ? MAX_CHALLENGES_WITH_CAPTCHA
     : MAX_CHALLENGES
 
-  if (MIN_TEZ === MAX_TEZ) return maxChallenges
+  if (MIN_MAV === MAX_MAV) return maxChallenges
 
-  // Calculate the proportion of the requested Tez to the maximum Tez
-  const tezProportion = (amount - MIN_TEZ) / (MAX_TEZ - MIN_TEZ)
+  // Calculate the proportion of the requested Mav to the maximum Mav
+  const mavProportion = (amount - MIN_MAV) / (MAX_MAV - MIN_MAV)
   const challengesNeeded = Math.ceil(
-    tezProportion * (maxChallenges - MIN_CHALLENGES) + MIN_CHALLENGES
+    mavProportion * (maxChallenges - MIN_CHALLENGES) + MIN_CHALLENGES
   )
 
   return challengesNeeded

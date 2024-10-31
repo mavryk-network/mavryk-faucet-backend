@@ -61,7 +61,7 @@ const validateAmount = (req: Request, res: Response, next: NextFunction) => {
     })
   }
 
-  if (amount < env.MIN_TEZ || amount > env.MAX_TEZ) {
+  if (amount < env.MIN_MAV || amount > env.MAX_MAV) {
     return res.status(400).send({
       status: "ERROR",
       message: `The amount '${amount}' is not within the allowed range`,
