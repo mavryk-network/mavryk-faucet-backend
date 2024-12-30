@@ -2,6 +2,7 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       API_PORT: string
+      FAUCET_CONTRACT_ADDRESS: string
       AUTHORIZED_HOST: string
       CAPTCHA_SECRET: string
       ENABLE_CAPTCHA: string
