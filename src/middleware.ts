@@ -2,6 +2,7 @@ import { validateKeyHash } from "@mavrykdynamics/taquito-utils"
 import { Request, Response, NextFunction } from "express"
 
 import env from "./env"
+import { Tokens } from "./Mavryk";
 
 export const cors = (_: Request, res: Response, next: NextFunction) => {
   const host = process.env.AUTHORIZED_HOST || "*"
@@ -53,6 +54,7 @@ const validateAddress = (req: Request, res: Response, next: NextFunction) => {
 
 const validateAmount = (req: Request, res: Response, next: NextFunction) => {
   const amount = Number(req.body.amount)
+  const token = req.body.token;
 
   if (!amount) {
     return res.status(400).send({
@@ -61,10 +63,31 @@ const validateAmount = (req: Request, res: Response, next: NextFunction) => {
     })
   }
 
-  if (amount < env.MIN_MAV || amount > env.MAX_MAV) {
+  if (!token) {
     return res.status(400).send({
       status: "ERROR",
-      message: `The amount '${amount}' is not within the allowed range`,
+      message: "'token' field is required",
+    })
+  }
+
+  if (token === Tokens.mvrk && (amount < env.MIN_MAV || amount > env.MAX_MAV)) {
+    return res.status(400).send({
+      status: "ERROR",
+      message: `The amount '${amount}' is not within the allowed range (${env.MIN_MAV} - ${env.MAX_MAV})`,
+    })
+  }
+
+  if (token === Tokens.usdt && (amount < env.MIN_USDT || amount > env.MAX_USDT)) {
+    return res.status(400).send({
+      status: "ERROR",
+      message: `The amount '${amount}' is not within the allowed range (${env.MIN_USDT} - ${env.MAX_USDT})`,
+    })
+  }
+
+  if (token === Tokens.mvn && (amount < env.MIN_MVN || amount > env.MAX_MVN)) {
+    return res.status(400).send({
+      status: "ERROR",
+      message: `The amount '${amount}' is not within the allowed range (${env.MIN_MVN} - ${env.MAX_MVN})`,
     })
   }
 

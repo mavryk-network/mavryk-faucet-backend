@@ -1,17 +1,19 @@
 import { InMemorySigner } from "@mavrykdynamics/taquito-signer"
 import { TezosToolkit } from "@mavrykdynamics/taquito"
 import { format } from "@mavrykdynamics/taquito-utils"
+import env from "./env"
+import { Response } from "express"
 
 const mvnTokenAddress = 'KT1WdbBw5DXF9fXN378v8VgrPqTsCKu2BPgD';
 const mvnTokenId = '0';
 const usdtTokenAddress = 'KT1StUZzJ34MhSNjkQMSyvZVrR9ppkHMFdFf';
 const usdtTokenId = '0';
 
-
-import env from "./env"
-
-import { Response } from "express"
-
+export enum Tokens {
+  mvn = 'mvn',
+  usdt = 'usdt',
+  mvrk = 'mvrk',
+}
 const toMvn = (amount: number) => amount * 10**9;
 const toUsdt = (amount: number) => amount * 10**6;
 
@@ -101,13 +103,13 @@ export const sendMavAndRespond = async (
     let txHash = '';
 
     switch (token) {
-      case 'mvn':
+      case Tokens.mvn:
         txHash = await sendMvn(address, amount)
         break;
-      case 'usdt':
+      case Tokens.usdt:
         txHash = await sendUsdt(address, amount)
         break;
-      case 'mvrk':
+      case Tokens.mvrk:
         txHash = await sendMav(address, amount)
         break;
       default:
