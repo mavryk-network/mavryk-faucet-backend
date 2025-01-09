@@ -77,20 +77,6 @@ const validateAmount = (req: Request, res: Response, next: NextFunction) => {
     })
   }
 
-  if (token === Tokens.usdt && (amount < env.MIN_USDT || amount > env.MAX_USDT)) {
-    return res.status(400).send({
-      status: "ERROR",
-      message: `The amount '${amount}' is not within the allowed range (${env.MIN_USDT} - ${env.MAX_USDT})`,
-    })
-  }
-
-  if (token === Tokens.mvn && (amount < env.MIN_MVN || amount > env.MAX_MVN)) {
-    return res.status(400).send({
-      status: "ERROR",
-      message: `The amount '${amount}' is not within the allowed range (${env.MIN_MVN} - ${env.MAX_MVN})`,
-    })
-  }
-
   req.body.amount = amount
   next()
 }
