@@ -1,6 +1,5 @@
 import { InMemorySigner } from "@mavrykdynamics/taquito-signer"
 import { TezosToolkit } from "@mavrykdynamics/taquito"
-import { format } from "@mavrykdynamics/taquito-utils"
 import env from "./env"
 import { Response } from "express"
 
@@ -8,6 +7,8 @@ const mvnTokenAddress = 'KT1WdbBw5DXF9fXN378v8VgrPqTsCKu2BPgD';
 const mvnTokenId = '0';
 const usdtTokenAddress = 'KT1StUZzJ34MhSNjkQMSyvZVrR9ppkHMFdFf';
 const usdtTokenId = '0';
+const mvrkTokenAddress = 'mv2ZZZZZZZZZZZZZZZZZZZZZZZZZZZDXMF2d';
+const mvrkTokenId = '0';
 
 export enum Tokens {
   mvn = 'mvn',
@@ -16,6 +17,7 @@ export enum Tokens {
 }
 const toMvn = (amount: number) => amount * 10**9;
 const toUsdt = (amount: number) => amount * 10**6;
+const toMvrk = (amount: number) => amount * 10**6;
 
 // Setup the TezosToolkit to interact with the chain.
 export const Mavryk = (() => {
@@ -39,26 +41,18 @@ export const Mavryk = (() => {
   return MavToolkit
 })()
 
-const sendMav = async (
-  address: string,
+const sendMvrk = async (
+  userAddress: string,
   amount: number
 ): Promise<string> => {
-  // Check max balance
-  const userBalanceMumav = await Mavryk.tz.getBalance(address)
-  const userBalance = Number(format("mumav", "mv", userBalanceMumav).valueOf())
+  const mvrkAmount = toMvrk(amount);
+  const mvnFaucetInstance = await Mavryk.contract.at(env.FAUCET_CONTRACT_ADDRESS);
 
-  if (env.MAX_BALANCE !== null && userBalance + amount > env.MAX_BALANCE) {
-    console.log(`${address} balance too high (${userBalance}). Not sending.`)
-    return '';
-  }
+  const operation = await mvnFaucetInstance.methods.requestToken(mvrkAmount, mvrkTokenAddress, mvrkTokenId, userAddress).send();
+  await operation.confirmation();
 
-  /* Note: `transfer` doesn't work well when running on node v19+. The
-    underlying Axios requests breaks with "ECONNRESET error socket hang up".
-    This is likely because node v19 sets HTTP(S) `keepAlive` to true by default
-    and the Mavryk node ends up killing the long-lived connection. It isn't easy
-    to configure Axios in Taquito to work around this. */
-  const operation = await Mavryk.contract.transfer({ to: address, amount })
-  console.log(`Sent ${amount} xtz to ${address}\nHash: ${operation.hash}`)
+  console.log(`Sent ${mvrkAmount} MVN to ${userAddress}\nHash: ${operation.hash}`)
+
   return operation.hash
 }
 
@@ -110,7 +104,7 @@ export const sendMavAndRespond = async (
         txHash = await sendUsdt(address, amount)
         break;
       case Tokens.mvrk:
-        txHash = await sendMav(address, amount)
+        txHash = await sendMvrk(address, amount)
         break;
       default:
         return res
@@ -141,6 +135,33 @@ export const sendMavAndRespond = async (
       return res.status(500).send({
         status: "ERROR",
         message: "Faucet is low or has gone empty. Please contact the team.",
+      })
+    }
+
+    if (
+        message.includes("TOKEN_REQUEST_EXCEEDS_MAXIMUM_ALLOWED")
+    ) {
+      return res.status(500).send({
+        status: "ERROR",
+        message: "TOKEN REQUEST EXCEEDS MAXIMUM ALLOWED",
+      })
+    }
+
+    if (
+        message.includes("ERROR_MVN_BALANCE_TOO_LOW")
+    ) {
+      return res.status(500).send({
+        status: "ERROR",
+        message: "MVN BALANCE TOO LOW",
+      })
+    }
+
+    if (
+        message.includes("ERROR_USDT_BALANCE_TOO_LOW")
+    ) {
+      return res.status(500).send({
+        status: "ERROR",
+        message: "USDT BALANCE TOO LOW",
       })
     }
 
