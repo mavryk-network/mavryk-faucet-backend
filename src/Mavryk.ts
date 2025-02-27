@@ -135,22 +135,20 @@ export const sendMavAndRespond = async (
     }
 
     if (
-        message.includes("ERROR_MVN_BALANCE_TOO_LOW")
+        message.includes("ERROR_USER_ALREADY_CLAIMED_TOKEN")
     ) {
       return res.status(500).send({
         status: "ERROR",
-        message: "MVN BALANCE TOO LOW",
+        message: `You have already claimed ${token.toUpperCase()} and are unable to claim again`,
       })
     }
 
-    if (
-        message.includes("ERROR_USDT_BALANCE_TOO_LOW")
-    ) {
+    if (message.includes("ERROR_TOKEN_BALANCE_TOO_LOW"))
       return res.status(500).send({
         status: "ERROR",
-        message: "USDT BALANCE TOO LOW",
+        message: `${token.toUpperCase()} balance too low`,
       })
-    }
+
 
     throw err
   }
