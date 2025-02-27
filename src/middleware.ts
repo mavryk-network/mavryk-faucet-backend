@@ -2,7 +2,6 @@ import { validateKeyHash } from "@mavrykdynamics/taquito-utils"
 import { Request, Response, NextFunction } from "express"
 
 import env from "./env"
-import { Tokens } from "./Mavryk";
 
 export const cors = (_: Request, res: Response, next: NextFunction) => {
   const host = process.env.AUTHORIZED_HOST || "*"
@@ -53,15 +52,7 @@ const validateAddress = (req: Request, res: Response, next: NextFunction) => {
 }
 
 const validateAmount = (req: Request, res: Response, next: NextFunction) => {
-  const amount = Number(req.body.amount)
   const token = req.body.token;
-
-  if (!amount) {
-    return res.status(400).send({
-      status: "ERROR",
-      message: "'amount' field is required",
-    })
-  }
 
   if (!token) {
     return res.status(400).send({
@@ -70,14 +61,6 @@ const validateAmount = (req: Request, res: Response, next: NextFunction) => {
     })
   }
 
-  if (token === Tokens.mvrk && (amount < env.MIN_MAV || amount > env.MAX_MAV)) {
-    return res.status(400).send({
-      status: "ERROR",
-      message: `The amount '${amount}' is not within the allowed range (${env.MIN_MAV} - ${env.MAX_MAV})`,
-    })
-  }
-
-  req.body.amount = amount
   next()
 }
 

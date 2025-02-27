@@ -43,45 +43,33 @@ export const Mavryk = (() => {
 
 const sendMvrk = async (
   userAddress: string,
-  amount: number
 ): Promise<string> => {
-  const mvrkAmount = toMvrk(amount);
   const mvnFaucetInstance = await Mavryk.contract.at(env.FAUCET_CONTRACT_ADDRESS);
 
-  const operation = await mvnFaucetInstance.methods.requestToken(mvrkAmount, mvrkTokenAddress, mvrkTokenId, userAddress).send();
+  const operation = await mvnFaucetInstance.methods.requestToken(mvrkTokenAddress, mvrkTokenId, userAddress).send();
   await operation.confirmation();
-
-  console.log(`Sent ${mvrkAmount} MVN to ${userAddress}\nHash: ${operation.hash}`)
 
   return operation.hash
 }
 
 const sendMvn = async (
   userAddress: string,
-  amount: number
 ): Promise<string> => {
-  const mvnAmount = toMvn(amount);
   const mvnFaucetInstance = await Mavryk.contract.at(env.FAUCET_CONTRACT_ADDRESS);
 
-  const operation = await mvnFaucetInstance.methods.requestToken(mvnAmount, mvnTokenAddress, mvnTokenId, userAddress).send();
+  const operation = await mvnFaucetInstance.methods.requestToken(mvnTokenAddress, mvnTokenId, userAddress).send();
   await operation.confirmation();
-
-  console.log(`Sent ${mvnAmount} MVN to ${userAddress}\nHash: ${operation.hash}`)
 
   return operation.hash
 }
 
 const sendUsdt = async (
   userAddress: string,
-  amount: number
 ): Promise<string> => {
-  const usdtAmount = toUsdt(amount);
   const usdtFaucetInstance = await Mavryk.contract.at(env.FAUCET_CONTRACT_ADDRESS);
 
-  const operation = await usdtFaucetInstance.methods.requestToken(usdtAmount, usdtTokenAddress, usdtTokenId, userAddress).send();
+  const operation = await usdtFaucetInstance.methods.requestToken(usdtTokenAddress, usdtTokenId, userAddress).send();
   await operation.confirmation();
-
-  console.log(`Sent ${usdtAmount} USDT to ${userAddress}\nHash: ${operation.hash}`)
 
   return operation.hash
 }
@@ -89,7 +77,6 @@ const sendUsdt = async (
 export const sendMavAndRespond = async (
   res: Response,
   address: string,
-  amount: number,
   token: string,
 ) => {
   try {
@@ -98,13 +85,13 @@ export const sendMavAndRespond = async (
 
     switch (token) {
       case Tokens.mvn:
-        txHash = await sendMvn(address, amount)
+        txHash = await sendMvn(address)
         break;
       case Tokens.usdt:
-        txHash = await sendUsdt(address, amount)
+        txHash = await sendUsdt(address)
         break;
       case Tokens.mvrk:
-        txHash = await sendMvrk(address, amount)
+        txHash = await sendMvrk(address)
         break;
       default:
         return res

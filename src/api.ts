@@ -96,7 +96,7 @@ app.post("/verify", verifyMiddleware, async (req: Request, res: Response) => {
     const { address, solution, nonce, token } = req.body
 
     if (env.DISABLE_CHALLENGES) {
-      await sendMavAndRespond(res, address, req.body.amount, token)
+      await sendMavAndRespond(res, address, token)
       return
     }
 
@@ -161,7 +161,7 @@ app.post("/verify", verifyMiddleware, async (req: Request, res: Response) => {
         .send({ status: "ERROR", message: "PoW challenge not found" })
     }
 
-    await sendMavAndRespond(res, address, amount, token)
+    await sendMavAndRespond(res, address, token)
     return
   } catch (err: any) {
     console.error(err)
