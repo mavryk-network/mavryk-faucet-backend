@@ -18,7 +18,13 @@ const determineChallengesNeeded = (amount: number, usedCaptcha: boolean) => {
     MIN_CHALLENGES,
     MAX_CHALLENGES,
     MAX_CHALLENGES_WITH_CAPTCHA,
+    CHALLENGES,
+    CHALLENGES_WITH_CAPTCHA
   } = env
+
+  if (usedCaptcha && CHALLENGES_WITH_CAPTCHA) return CHALLENGES_WITH_CAPTCHA;
+
+  if (CHALLENGES) return CHALLENGES;
 
   // Calculate the base number of challenges based on the Mav proportion and whether a captcha was used
   const maxChallenges = usedCaptcha
