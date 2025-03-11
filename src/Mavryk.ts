@@ -3,9 +3,9 @@ import { TezosToolkit } from "@mavrykdynamics/taquito"
 import env from "./env"
 import { Response } from "express"
 
-const mvnTokenAddress = 'KT1WdbBw5DXF9fXN378v8VgrPqTsCKu2BPgD';
+const mvnTokenAddress = 'KT1PBrfUaHoe21a7J4gAUZJT4m3VJTkaEVqY';
 const mvnTokenId = '0';
-const usdtTokenAddress = 'KT1StUZzJ34MhSNjkQMSyvZVrR9ppkHMFdFf';
+const usdtTokenAddress = 'KT1A5hFGc8uGQLZhkpSgTieDd1jEReZkZ65i';
 const usdtTokenId = '0';
 const mvrkTokenAddress = 'mv2ZZZZZZZZZZZZZZZZZZZZZZZZZZZDXMF2d';
 const mvrkTokenId = '0';
