@@ -54,7 +54,7 @@ Optional:
 - `AUTHORIZED_HOST`: CORS origin whitelist (default `*`)
 - `DISABLE_CHALLENGES`: `true` to disable challenges (default: `false`)
 - `ENABLE_CAPTCHA`: `true` to enable ReCAPTCHA, `false` otherwise (default: `true`)
-- `MAX_BALANCE`: maximum address balance beyond which sending of XTZ is refused (default: `null`)
+- `MAX_BALANCE`: maximum address balance beyond which sending of MVRK is refused (default: `null`)
 - `MIN_MAV`: Minimum amount of Mav that can be requested (default: `1`)
 - `MAX_MAV`: Maximum amount of Mav that can be requested (default: `6000`)
 - `DIFFICULTY`: Difficulty level for challenges (default: `4`)
