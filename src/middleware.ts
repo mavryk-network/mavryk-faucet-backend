@@ -2,6 +2,7 @@ import { validateKeyHash } from "@mavrykdynamics/webmavryk-utils"
 import { Request, Response, NextFunction } from "express"
 
 import env from "./env"
+import { checkMainnetBalance } from "./mainnetGate"
 
 export const cors = (_: Request, res: Response, next: NextFunction) => {
   const host = process.env.AUTHORIZED_HOST || "*"
@@ -97,9 +98,36 @@ const validateChallengeBody = (
   next()
 }
 
+const mainnetBalanceGate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!env.ENABLE_MAINNET_GATE) return next()
+
+  try {
+    const { address } = req.body
+    const { eligible, balance } = await checkMainnetBalance(address)
+
+    if (!eligible) {
+      return res.status(403).send({
+        status: "ERROR",
+        message: `Your mainnet MVRK balance (${balance}) is below the required minimum of ${env.MAINNET_MIN_BALANCE} MVRK.`,
+      })
+    }
+
+    next()
+  } catch (err: any) {
+    console.error("Mainnet balance gate error:", err.message || err)
+    // On error, allow the request through rather than blocking
+    next()
+  }
+}
+
 export const challengeMiddleware = [
   checkChallengesEnabled,
   validateAddress,
+  mainnetBalanceGate,
   validateAmount,
 ]
 
