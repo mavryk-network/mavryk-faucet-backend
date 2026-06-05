@@ -15,8 +15,12 @@ export type InfoResponseBody = {
   captchaEnabled: boolean
   challengesEnabled: boolean
   maxBalance: number | null
-  minMav: number,
+  minMav: number
   maxMav: number
+  minMvn: number
+  maxMvn: number
+  minUsdt: number
+  maxUsdt: number
 }
 
 export type FaucetRequest = {

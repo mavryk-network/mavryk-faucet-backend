@@ -15,8 +15,9 @@ import {
   closeDatabase,
   insertRequest,
   getRequestById,
-  getRecentSuccessfulRequest,
+  getRecentRequestForToken,
   getPendingPosition,
+  recoverOrphanedBatched,
 } from "./database"
 import { startBatchWorker, stopBatchWorker } from "./batchWorker"
 import { startTelegramAlerts, stopTelegramAlerts } from "./telegramAlerts"
@@ -38,6 +39,10 @@ app.get("/info", async (_, res: Response) => {
       maxBalance: env.MAX_BALANCE,
       minMav: env.MIN_MAV,
       maxMav: env.MAX_MAV,
+      minMvn: env.MIN_MVN,
+      maxMvn: env.MAX_MVN,
+      minUsdt: env.MIN_USDT,
+      maxUsdt: env.MAX_USDT,
     }
     return res.status(200).send(info)
   } catch (error) {
@@ -171,6 +176,21 @@ app.post("/verify", verifyMiddleware, async (req: Request, res: Response) => {
       }
     }
 
+    // Server-side amount validation per token
+    const requestToken = token || "mvrk"
+    const tokenLimits: Record<string, { min: number; max: number }> = {
+      mvrk: { min: env.MIN_MAV, max: env.MAX_MAV },
+      mvn: { min: env.MIN_MVN, max: env.MAX_MVN },
+      usdt: { min: env.MIN_USDT, max: env.MAX_USDT },
+    }
+    const limits = tokenLimits[requestToken]
+    if (limits && (amount < limits.min || amount > limits.max)) {
+      return res.status(400).send({
+        status: "ERROR",
+        message: `Amount must be between ${limits.min} and ${limits.max} ${requestToken.toUpperCase()}.`,
+      })
+    }
+
     // Mainnet balance gate (runs here to cover both challenge and no-challenge paths)
     if (env.ENABLE_MAINNET_GATE) {
       try {
@@ -186,9 +206,9 @@ app.post("/verify", verifyMiddleware, async (req: Request, res: Response) => {
       }
     }
 
-    // 24-hour cooldown check
+    // 24-hour cooldown check (per token)
     if (env.ENABLE_COOLDOWN) {
-      const recent = getRecentSuccessfulRequest(address, env.COOLDOWN_HOURS)
+      const recent = getRecentRequestForToken(address, requestToken, env.COOLDOWN_HOURS)
       if (recent) {
         const requestTime = new Date(recent.created_at + "Z").getTime()
         const cooldownEnd =
@@ -197,7 +217,7 @@ app.post("/verify", verifyMiddleware, async (req: Request, res: Response) => {
         const remainingHours = Math.max(1, Math.ceil(remainingMs / 3600000))
         return res.status(429).send({
           status: "ERROR",
-          message: `Address has already received tokens. Please wait ${remainingHours} hour(s).`,
+          message: `Address has already received ${requestToken.toUpperCase()} tokens. Please wait ${remainingHours} hour(s).`,
         })
       }
     }
@@ -260,6 +280,12 @@ app.get("/status/:requestId", async (req: Request, res: Response) => {
 // Initialize services and start server.
 ;(async () => {
   initDatabase()
+
+  // Recover any requests stuck in 'batched' from a previous crash
+  const recovered = recoverOrphanedBatched()
+  if (recovered > 0) {
+    console.log(`Recovered ${recovered} orphaned batched request(s).`)
+  }
 
   if (!env.DISABLE_CHALLENGES) {
     await redis.connect()

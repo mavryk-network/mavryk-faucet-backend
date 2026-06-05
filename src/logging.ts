@@ -48,7 +48,7 @@ export const httpLogger = (req: Request, res: Response, next: NextFunction) => {
       // Don't log an entire really long random string a user could send.
       address: req?.body?.address?.slice(0, 36) || "-",
       amount: req?.body?.amount
-        ? `${String(req.body.amount).slice(0, 10)}ṁ`
+        ? `${String(req.body.amount).slice(0, 10)} ${(req.body.token || "ṁ").toUpperCase()}`
         : "-",
     }
     httpWinstonLogger.http(logEntry)

@@ -125,22 +125,33 @@ export const getRequestById = (id: string): FaucetRequest | undefined => {
     .get(id) as FaucetRequest | undefined
 }
 
-export const getRecentSuccessfulRequest = (
+export const getRecentRequestForToken = (
   address: string,
+  token: string,
   windowHours: number
 ): FaucetRequest | undefined => {
-  // Check for any non-failed request (pending, batched, or confirmed)
-  // within the cooldown window. This prevents duplicate requests while
-  // a previous one is still being processed.
+  /** Check for any non-failed request (pending, batched, or confirmed). */
   return db
     .prepare(
       `SELECT * FROM faucet_requests
-       WHERE address = ? AND status != 'failed'
+       WHERE address = ? AND token = ? AND status != 'failed'
        AND created_at > datetime('now', '-' || ? || ' hours')
        ORDER BY created_at DESC
        LIMIT 1`
     )
-    .get(address, windowHours) as FaucetRequest | undefined
+    .get(address, token, windowHours) as FaucetRequest | undefined
+}
+
+/** Reset orphaned 'batched' requests back to 'pending' on startup. */
+export const recoverOrphanedBatched = (): number => {
+  const result = db
+    .prepare(
+      `UPDATE faucet_requests
+       SET status = 'pending', updated_at = datetime('now')
+       WHERE status = 'batched'`
+    )
+    .run()
+  return result.changes
 }
 
 export const getPendingPosition = (id: string): number => {

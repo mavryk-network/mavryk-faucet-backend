@@ -9,6 +9,10 @@ const {
   MAX_BALANCE,
   MIN_MAV,
   MAX_MAV,
+  MIN_MVN,
+  MAX_MVN,
+  MIN_USDT,
+  MAX_USDT,
   MIN_CHALLENGES,
   MAX_CHALLENGES,
   MAX_CHALLENGES_WITH_CAPTCHA,
@@ -26,6 +30,9 @@ const {
   MAINNET_RPC_URL,
   MAINNET_MIN_BALANCE,
   MAINNET_CACHE_TTL_S,
+  // FA2 token contracts
+  MVN_CONTRACT_ADDRESS,
+  USDT_CONTRACT_ADDRESS,
   // Telegram alerts
   TELEGRAM_BOT_TOKEN,
   TELEGRAM_CHAT_ID,
@@ -41,6 +48,10 @@ const env = {
   MAX_BALANCE: MAX_BALANCE ? Number(MAX_BALANCE) : null,
   MIN_MAV: MIN_MAV ? Number(MIN_MAV) : 1,
   MAX_MAV: MAX_MAV ? Number(MAX_MAV) : 6000,
+  MIN_MVN: MIN_MVN ? Number(MIN_MVN) : 1,
+  MAX_MVN: MAX_MVN ? Number(MAX_MVN) : 400,
+  MIN_USDT: MIN_USDT ? Number(MIN_USDT) : 1,
+  MAX_USDT: MAX_USDT ? Number(MAX_USDT) : 1000,
   CHALLENGE_SIZE: CHALLENGE_SIZE ? Number(CHALLENGE_SIZE) : 2048,
   DIFFICULTY: DIFFICULTY ? Number(DIFFICULTY) : 4,
   MIN_CHALLENGES: MIN_CHALLENGES ? Number(MIN_CHALLENGES) : 1,
@@ -60,6 +71,9 @@ const env = {
   MAINNET_RPC_URL: MAINNET_RPC_URL || "",
   MAINNET_MIN_BALANCE: MAINNET_MIN_BALANCE ? Number(MAINNET_MIN_BALANCE) : 10,
   MAINNET_CACHE_TTL_S: MAINNET_CACHE_TTL_S ? Number(MAINNET_CACHE_TTL_S) : 60,
+  // FA2 token contracts
+  MVN_CONTRACT_ADDRESS: MVN_CONTRACT_ADDRESS || "KT1EWqLYMjrimcJRFWSPkNGNLnpiKBZHWZ86",
+  USDT_CONTRACT_ADDRESS: USDT_CONTRACT_ADDRESS || "KT1WTEKHD2fH24d7JNGbquSiLPktz796WBmA",
   // Telegram alerts
   TELEGRAM_BOT_TOKEN: TELEGRAM_BOT_TOKEN || "",
   TELEGRAM_CHAT_ID: TELEGRAM_CHAT_ID || "",
@@ -114,10 +128,16 @@ if (
   )
 }
 
-if (env.MAX_MAV < env.MIN_MAV || env.MIN_MAV <= 0 || env.MAX_MAV <= 0) {
-  throw new Error(
-    "Env vars MAX_MAV and MIN_MAV must be greater than 0 and MAX_MAV must be greater than or equal to MIN_MAV."
-  )
+for (const [min, max, label] of [
+  [env.MIN_MAV, env.MAX_MAV, "MAV"],
+  [env.MIN_MVN, env.MAX_MVN, "MVN"],
+  [env.MIN_USDT, env.MAX_USDT, "USDT"],
+] as const) {
+  if (max < min || min <= 0 || max <= 0) {
+    throw new Error(
+      `Env vars MAX_${label} and MIN_${label} must be greater than 0 and MAX_${label} must be >= MIN_${label}.`
+    )
+  }
 }
 
 export default env

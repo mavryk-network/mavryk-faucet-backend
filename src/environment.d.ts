@@ -14,6 +14,10 @@ declare global {
       RPC_URL: string
       MIN_MAV: string
       MAX_MAV: string
+      MIN_MVN: string
+      MAX_MVN: string
+      MIN_USDT: string
+      MAX_USDT: string
       MIN_CHALLENGES: string
       MAX_CHALLENGES: string
       MAX_CHALLENGES_WITH_CAPTCHA: string
@@ -32,6 +36,9 @@ declare global {
       MAINNET_RPC_URL: string
       MAINNET_MIN_BALANCE: string
       MAINNET_CACHE_TTL_S: string
+      // FA2 token contracts
+      MVN_CONTRACT_ADDRESS: string
+      USDT_CONTRACT_ADDRESS: string
       // Telegram alerts
       TELEGRAM_BOT_TOKEN: string
       TELEGRAM_CHAT_ID: string

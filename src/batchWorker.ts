@@ -1,5 +1,12 @@
 import env from "./env"
-import { Mavryk, checkBalance } from "./Mavryk"
+import {
+  Mavryk,
+  checkBalance,
+  getFaucetAddress,
+  getFA2Contract,
+  FA2_TOKEN_IDS,
+  toRawAmount,
+} from "./Mavryk"
 import {
   getPendingRequests,
   markAsBatched,
@@ -23,12 +30,12 @@ const processBatch = async (): Promise<void> => {
     const ids = pending.map((r) => r.id)
     markAsBatched(ids)
 
-    // Check balances and filter out recipients over MAX_BALANCE
+    // Check MVRK balances and filter out recipients over MAX_BALANCE (only applies to native MVRK transfers)
     const valid: FaucetRequest[] = []
     const overBalance: string[] = []
 
     for (const req of pending) {
-      if (env.MAX_BALANCE !== null) {
+      if (req.token === "mvrk" && env.MAX_BALANCE !== null) {
         try {
           const balance = await checkBalance(req.address)
           if (balance + req.amount > env.MAX_BALANCE) {
@@ -40,8 +47,6 @@ const processBatch = async (): Promise<void> => {
             `Error checking balance for ${req.address}:`,
             err
           )
-          // On balance check failure, still include in batch — the chain
-          // will reject if there's an actual issue.
         }
       }
       valid.push(req)
@@ -54,11 +59,40 @@ const processBatch = async (): Promise<void> => {
     if (valid.length === 0) return
 
     const validIds = valid.map((r) => r.id)
+    const faucetAddress = await getFaucetAddress()
 
-    // Build and send the batch
+    // Build the batch with mixed transfer types
     const batch = Mavryk.contract.batch()
+
     for (const req of valid) {
-      batch.withTransfer({ to: req.address, amount: req.amount })
+      if (req.token === "mvrk") {
+        // Native MVRK transfer
+        batch.withTransfer({ to: req.address, amount: req.amount })
+      } else {
+        // FA2 token transfer (mvn or usdt)
+        const contract = await getFA2Contract(req.token)
+        if (!contract) {
+          markAsFailed([req.id], `Unknown token type: ${req.token}`)
+          continue
+        }
+
+        const tokenId = FA2_TOKEN_IDS[req.token] ?? 0
+        const rawAmount = toRawAmount(req.token, req.amount)
+        batch.withContractCall(
+          contract.methods.transfer([
+            {
+              from_: faucetAddress,
+              txs: [
+                {
+                  to_: req.address,
+                  token_id: tokenId,
+                  amount: rawAmount,
+                },
+              ],
+            },
+          ])
+        )
+      }
     }
 
     let opHash: string | undefined
@@ -66,8 +100,9 @@ const processBatch = async (): Promise<void> => {
     try {
       const op = await batch.send()
       opHash = op.hash
+      const tokenSummary = summarizeTokens(valid)
       console.log(
-        `Batch sent: ${op.hash} (${valid.length} transfers). Waiting for confirmation...`
+        `Batch sent: ${op.hash} (${tokenSummary}). Waiting for confirmation...`
       )
       await op.confirmation()
       console.log(`Batch confirmed: ${op.hash}`)
@@ -77,16 +112,11 @@ const processBatch = async (): Promise<void> => {
       console.error("Batch failed:", err.message || err)
 
       if (opHash) {
-        // Injection succeeded but confirmation failed — the operation may
-        // have landed on-chain. Mark as confirmed optimistically with the
-        // hash. The next cycle will not re-process these since they are
-        // no longer pending.
         console.log(
           `Operation ${opHash} was injected but confirmation failed. Marking as confirmed.`
         )
         markAsConfirmed(validIds, opHash)
       } else {
-        // Injection failed — safe to retry
         handleRetry(valid)
       }
     }
@@ -95,6 +125,16 @@ const processBatch = async (): Promise<void> => {
   } finally {
     isProcessing = false
   }
+}
+
+const summarizeTokens = (requests: FaucetRequest[]): string => {
+  const counts: Record<string, number> = {}
+  for (const req of requests) {
+    counts[req.token] = (counts[req.token] || 0) + 1
+  }
+  return Object.entries(counts)
+    .map(([token, count]) => `${count} ${token.toUpperCase()}`)
+    .join(", ")
 }
 
 const handleRetry = (requests: FaucetRequest[]): void => {
