@@ -31,6 +31,23 @@ export const checkBalance = async (address: string): Promise<number> => {
   return Number(format("mumav", "mv", balanceMumav).valueOf())
 }
 
+/** Returns the FA2 token balance in human-readable units. */
+export const checkFA2Balance = async (
+  address: string,
+  token: string
+): Promise<number> => {
+  const contract = await getFA2Contract(token)
+  if (!contract) return 0
+
+  const tokenId = FA2_TOKEN_IDS[token] ?? 0
+  const storage: any = await contract.storage()
+  const balanceRaw = await storage.ledger.get({ 0: address, 1: tokenId })
+  if (!balanceRaw) return 0
+
+  const decimals = FA2_DECIMALS[token] ?? 0
+  return Number(balanceRaw) / 10 ** decimals
+}
+
 /** Get the faucet's own address. */
 export const getFaucetAddress = async (): Promise<string> => {
   return Mavryk.signer.publicKeyHash()

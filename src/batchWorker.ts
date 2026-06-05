@@ -2,6 +2,7 @@ import env from "./env"
 import {
   Mavryk,
   checkBalance,
+  checkFA2Balance,
   getFaucetAddress,
   getFA2Contract,
   FA2_TOKEN_IDS,
@@ -30,21 +31,31 @@ const processBatch = async (): Promise<void> => {
     const ids = pending.map((r) => r.id)
     markAsBatched(ids)
 
-    // Check MVRK balances and filter out recipients over MAX_BALANCE (only applies to native MVRK transfers)
+    // Check balances per token and filter out recipients over MAX_BALANCE
+    const maxBalances: Record<string, number | null> = {
+      mvrk: env.MAX_BALANCE,
+      mvn: env.MAX_BALANCE_MVN,
+      usdt: env.MAX_BALANCE_USDT,
+    }
+
     const valid: FaucetRequest[] = []
     const overBalance: string[] = []
 
     for (const req of pending) {
-      if (req.token === "mvrk" && env.MAX_BALANCE !== null) {
+      const maxBal = maxBalances[req.token]
+      if (maxBal !== null && maxBal !== undefined) {
         try {
-          const balance = await checkBalance(req.address)
-          if (balance + req.amount > env.MAX_BALANCE) {
+          const balance =
+            req.token === "mvrk"
+              ? await checkBalance(req.address)
+              : await checkFA2Balance(req.address, req.token)
+          if (balance + req.amount > maxBal) {
             overBalance.push(req.id)
             continue
           }
         } catch (err) {
           console.error(
-            `Error checking balance for ${req.address}:`,
+            `Error checking ${req.token} balance for ${req.address}:`,
             err
           )
         }

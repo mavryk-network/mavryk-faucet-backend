@@ -9,6 +9,8 @@ declare global {
       DISABLE_CHALLENGES: string
       FAUCET_PRIVATE_KEY: string
       MAX_BALANCE: string
+      MAX_BALANCE_MVN: string
+      MAX_BALANCE_USDT: string
       REDIS_PASSWORD: string
       REDIS_URL: string
       RPC_URL: string
