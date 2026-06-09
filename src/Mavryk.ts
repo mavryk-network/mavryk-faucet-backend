@@ -1,8 +1,14 @@
+import http from "http"
+import https from "https"
 import { InMemorySigner } from "@mavrykdynamics/webmavryk-signer"
 import { MavrykToolkit } from "@mavrykdynamics/webmavryk"
 import { format } from "@mavrykdynamics/webmavryk-utils"
 
 import env from "./env"
+
+// Disable keepAlive globally to avoid "socket hang up" errors
+http.globalAgent = new http.Agent({ keepAlive: false })
+https.globalAgent = new https.Agent({ keepAlive: false })
 
 // Setup the MavrykToolkit to interact with the chain.
 export const Mavryk = (() => {
