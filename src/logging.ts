@@ -8,11 +8,29 @@ const httpWinstonLogger = winston.createLogger({
     winston.format.printf(
       ({
         timestamp,
-        message: { method, url, status, responseTime, address, amount },
-      }) =>
-        `${timestamp} ${method?.padEnd(7)} ${url?.padEnd(10)} ${status} ${(
+        message,
+      }) => {
+
+        const {
+          method,
+          url,
+          status,
+          responseTime,
+          address,
+          amount,
+        } = message as {
+          method?: string
+          url?: string
+          status?: number
+          responseTime?: number
+          address?: string
+          amount?: string
+        };
+
+        return `${timestamp} ${method?.padEnd(7)} ${url?.padEnd(10)} ${status} ${(
           responseTime + "ms"
         ).padEnd(5)} ${address} ${amount}`
+      }
     )
   ),
   transports: [new winston.transports.Console()],
@@ -30,7 +48,7 @@ export const httpLogger = (req: Request, res: Response, next: NextFunction) => {
       // Don't log an entire really long random string a user could send.
       address: req?.body?.address?.slice(0, 36) || "-",
       amount: req?.body?.amount
-        ? `${String(req.body.amount).slice(0, 10)}ꜩ`
+        ? `${String(req.body.amount).slice(0, 10)} ${(req.body.token || "ṁ").toUpperCase()}`
         : "-",
     }
     httpWinstonLogger.http(logEntry)

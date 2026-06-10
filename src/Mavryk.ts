@@ -1,39 +1,29 @@
-import { InMemorySigner } from "@mavrykdynamics/taquito-signer"
-import { TezosToolkit } from "@mavrykdynamics/taquito"
+import http from "http"
+import https from "https"
+import { InMemorySigner } from "@mavrykdynamics/webmavryk-signer"
+import { MavrykToolkit } from "@mavrykdynamics/webmavryk"
+import { format } from "@mavrykdynamics/webmavryk-utils"
+
 import env from "./env"
-import { Response } from "express"
 
-const mvnTokenAddress = 'KT1EmkMv4FRTCC4op5Xzf3fcHzwazFXXDHLC';
-const mvnTokenId = '0';
-const usdtTokenAddress = 'KT1D7ZQBhwxkMgZThqctYtMXigFvJRZL4eSy';
-const usdtTokenId = '0';
-const mvrkTokenAddress = 'mv2ZZZZZZZZZZZZZZZZZZZZZZZZZZZDXMF2d';
-const mvrkTokenId = '0';
+// Disable keepAlive globally to avoid "socket hang up" errors
+http.globalAgent = new http.Agent({ keepAlive: false })
+https.globalAgent = new https.Agent({ keepAlive: false })
 
-export enum Tokens {
-  mvn = 'mvn',
-  usdt = 'usdt',
-  mvrk = 'mvrk',
-}
-const toMvn = (amount: number) => amount * 10**9;
-const toUsdt = (amount: number) => amount * 10**6;
-const toMvrk = (amount: number) => amount * 10**6;
-
-// Setup the TezosToolkit to interact with the chain.
+// Setup the MavrykToolkit to interact with the chain.
 export const Mavryk = (() => {
   const rpcUrl = env.RPC_URL
   if (!rpcUrl) {
     throw new Error("No RPC_URL defined.")
   }
 
-  const MavToolkit = new TezosToolkit(rpcUrl)
+  const MavToolkit = new MavrykToolkit(rpcUrl)
 
   const faucetPrivateKey = env.FAUCET_PRIVATE_KEY
   if (!faucetPrivateKey) {
     throw new Error("No FAUCET_PRIVATE_KEY defined.")
   }
 
-  // Create signer
   MavToolkit.setProvider({
     signer: new InMemorySigner(faucetPrivateKey),
   })
@@ -41,115 +31,71 @@ export const Mavryk = (() => {
   return MavToolkit
 })()
 
-const sendMvrk = async (
-  userAddress: string,
-): Promise<string> => {
-  const mvnFaucetInstance = await Mavryk.contract.at(env.FAUCET_CONTRACT_ADDRESS);
-
-  const operation = await mvnFaucetInstance.methods.requestToken(mvrkTokenAddress, mvrkTokenId, userAddress).send();
-  await operation.confirmation();
-
-  return operation.hash
+/** Returns the balance in MVRK (not mumav). */
+export const checkBalance = async (address: string): Promise<number> => {
+  const balanceMumav = await Mavryk.mv.getBalance(address)
+  return Number(format("mumav", "mv", balanceMumav).valueOf())
 }
 
-const sendMvn = async (
-  userAddress: string,
-): Promise<string> => {
-  const mvnFaucetInstance = await Mavryk.contract.at(env.FAUCET_CONTRACT_ADDRESS);
-
-  const operation = await mvnFaucetInstance.methods.requestToken(mvnTokenAddress, mvnTokenId, userAddress).send();
-  await operation.confirmation();
-
-  return operation.hash
-}
-
-const sendUsdt = async (
-  userAddress: string,
-): Promise<string> => {
-  const usdtFaucetInstance = await Mavryk.contract.at(env.FAUCET_CONTRACT_ADDRESS);
-
-  const operation = await usdtFaucetInstance.methods.requestToken(usdtTokenAddress, usdtTokenId, userAddress).send();
-  await operation.confirmation();
-
-  return operation.hash
-}
-
-export const sendMavAndRespond = async (
-  res: Response,
+/** Returns the FA2 token balance in human-readable units. */
+export const checkFA2Balance = async (
   address: string,
-  token: string,
-) => {
-  try {
+  token: string
+): Promise<number> => {
+  const contract = await getFA2Contract(token)
+  if (!contract) return 0
 
-    let txHash = '';
+  const tokenId = FA2_TOKEN_IDS[token] ?? 0
+  const storage: any = await contract.storage()
+  const balanceRaw = await storage.ledger.get({ 0: address, 1: tokenId })
+  if (!balanceRaw) return 0
 
-    switch (token) {
-      case Tokens.mvn:
-        txHash = await sendMvn(address)
-        break;
-      case Tokens.usdt:
-        txHash = await sendUsdt(address)
-        break;
-      case Tokens.mvrk:
-        txHash = await sendMvrk(address)
-        break;
-      default:
-        return res
-            .status(400)
-            .send({ status: "ERROR", message: "Incorrect token" })
-    }
+  const decimals = FA2_DECIMALS[token] ?? 0
+  return Number(balanceRaw) / 10 ** decimals
+}
 
-    if (!txHash) {
-      return res
-          .status(403)
-          .send({ status: "ERROR", message: "You have already enough ꜩ" })
-    }
+/** Get the faucet's own address. */
+export const getFaucetAddress = async (): Promise<string> => {
+  return Mavryk.signer.publicKeyHash()
+}
 
-    return res
-        .status(200)
-        .send({ txHash, status: "SUCCESS", message: "Token sent" })
-  } catch (err: any) {
-    console.error(`Error sending token to ${address}.`, err)
+/** FA2 token contract addresses. */
+export const FA2_CONTRACTS: Record<string, string> = {
+  mvn: env.MVN_CONTRACT_ADDRESS,
+  usdt: env.USDT_CONTRACT_ADDRESS,
+}
 
-    const { message } = err
+/** Token IDs on the FA2 contracts (both use token_id 0). */
+export const FA2_TOKEN_IDS: Record<string, number> = {
+  mvn: 0,
+  usdt: 0,
+}
 
-    if (
-      message.includes("subtraction_underflow") ||
-      message.includes("storage_exhausted") ||
-      message.includes("FA2_INSUFFICIENT_BALANCE") ||
-      message.includes("empty_implicit_contract")
-    ) {
-      return res.status(500).send({
-        status: "ERROR",
-        message: "Faucet is low or has gone empty. Please contact the team.",
-      })
-    }
+/** Decimals for each token. */
+export const FA2_DECIMALS: Record<string, number> = {
+  mvn: 9,
+  usdt: 6,
+}
 
-    if (
-        message.includes("TOKEN_REQUEST_EXCEEDS_MAXIMUM_ALLOWED")
-    ) {
-      return res.status(500).send({
-        status: "ERROR",
-        message: "TOKEN REQUEST EXCEEDS MAXIMUM ALLOWED",
-      })
-    }
+/** Convert a human-readable FA2 amount to the raw on-chain amount. */
+export const toRawAmount = (token: string, amount: number): number => {
+  const decimals = FA2_DECIMALS[token]
+  if (decimals === undefined) return amount
+  return Math.floor(amount * 10 ** decimals)
+}
 
-    if (
-        message.includes("ERROR_USER_ALREADY_CLAIMED_TOKEN")
-    ) {
-      return res.status(500).send({
-        status: "ERROR",
-        message: `You have already claimed ${token.toUpperCase()} and are unable to claim again`,
-      })
-    }
+/** Cache for FA2 contract instances to avoid re-fetching on each batch cycle. */
+const contractCache = new Map<string, any>()
 
-    if (message.includes("ERROR_TOKEN_BALANCE_TOO_LOW"))
-      return res.status(500).send({
-        status: "ERROR",
-        message: `${token.toUpperCase()} balance too low`,
-      })
+export const getFA2Contract = async (token: string) => {
+  const address = FA2_CONTRACTS[token]
+  if (!address) return null
 
-
-    throw err
+  if (contractCache.has(address)) {
+    return contractCache.get(address)
   }
+
+  const contract = await Mavryk.contract.at(address)
+  contractCache.set(address, contract)
+  return contract
 }
